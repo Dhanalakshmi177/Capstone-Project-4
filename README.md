@@ -17,18 +17,12 @@ The following skills were acquired from the project:
 - STREAMLIT GUI
 - POWERBI
 # Work Flow
- Data Collection
- Gather data from Airbnb's public API or other available sources. Collect information on listings, hosts, reviews, pricing, and location data.
- Data Cleaning and Preprocessing
- Clean and preprocess the data to handle missing values, outliers, and ensure data quality.Convert data types, handle duplicates, and standardize formats.
- # Exploratory Data Analysis (EDA)
- Conduct exploratory data analysis to understand the distribution and patterns in the data.Explore relationships between variables and identify potential insights.
- # Visualization
- Create visualizations to represent key metrics and trends.Use charts, graphs, and maps to convey information effectively.Consider using tools like Matplotlib, Seaborn, or Plotly for visualizations.
- # Geospatial Analysis
- Utilize geospatial analysis to understand the geographical distribution of listings.Map out popular areas, analyze neighborhood characteristics, and visualize pricing variations.
- # Dashboard Creation
- Utilize Tableau or Power BI to create a comprehensive dashboard that presents key insights from your analysis. 
+ - Data Collection:Gather data from Airbnb's public API or other available sources. Collect information on listings, hosts, reviews, pricing, and location data.
+ - Data Cleaning and Preprocessing:Clean and preprocess the data to handle missing values, outliers, and ensure data quality.Convert data types, handle duplicates, and standardize formats.
+ - Exploratory Data Analysis (EDA): Conduct exploratory data analysis to understand the distribution and patterns in the data.Explore relationships between variables and identify potential insights.
+ - Visualization:Create visualizations to represent key metrics and trends.Use charts, graphs, and maps to convey information effectively.Consider using tools like Matplotlib, Seaborn, or Plotly for visualizations.
+ - Geospatial Analysis:Utilize geospatial analysis to understand the geographical distribution of listings.Map out popular areas, analyze neighborhood characteristics, and visualize pricing variations.
+ - Dashboard Creation : Utilize Tableau or Power BI to create a comprehensive dashboard that presents key insights from your analysis. 
 # Conclusion
 The goal of this project is to to analyze Airbnb data & perform data cleaning and preparation, develop interactive geospatial visualizations, based trends in the Airbnb marketplace.
 # References
