@@ -7,10 +7,9 @@ import warnings
 warnings.filterwarnings("ignore")
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from sklearn.cluster import KMeans  
+
 
 df = pd.read_csv("C:/Users/LENOVO/Desktop/Files/Airbnb.csv")
-
 
 # --------------------------------------------------Logo & details on top
 
@@ -101,22 +100,10 @@ if opt=="Explore Data":
             fig.update_layout(mapbox_style="open-street-map", title="Listing Availability by Location")
             st.plotly_chart(fig)
       
-            #------------------------------------------------------------------Are there any spatial clusters of high-priced listings?
-                     
-            df = df.dropna(subset=['Price'])
-            X = df[['latitude', 'longitude', 'Price']]
-            kmeans = KMeans(n_clusters=5, random_state=42)
-            df['cluster'] = kmeans.fit_predict(X)
-            fig = px.scatter_mapbox(df, lat="latitude", lon="longitude", color="cluster",
-                                    hover_name="suburb", hover_data=["Price"],
-                                    color_continuous_scale=px.colors.qualitative.Dark24,
-                                    zoom=1,width=1250,height=700)
-
-            fig.update_layout(mapbox_style="open-street-map", title="Spatial Clusters of High-Priced Listings")
-            st.plotly_chart(fig)
+            
 
             #-----------------------------------------------
-
+            st.write("###### **Geospatial Distribution of Listings** ")
             fig = px.scatter_mapbox(df, lat='Latitude', lon='Longitude', color='Price', size='Accomodates',
                                     color_continuous_scale= "Pinkyl",hover_name='Name',range_color=(0,1000), mapbox_style="carto-positron",
                                     zoom=1)
@@ -124,7 +111,7 @@ if opt=="Explore Data":
 
             fig.update_traces(hovertemplate='<b>%{hovertext}</b><br><br>Price: %{marker.color}<br>Accommodates: %{marker.size}<br>Country: %{customdata[0]}<br>No. of Reviews: %{customdata[1]}<br>Review Scores: %{customdata[2]}<br>Availability: %{customdata[3]}',
                         customdata=df[['Country', 'No_of_reviews', 'Review_scores','Availability_365']])
-            fig.update_layout(width=1250,height=800,title='Geospatial Distribution of Listings')
+            fig.update_layout(width=1250,height=800, title='Geospatial Distribution of Listings')
             fig.update_layout(
             mapbox_style="white-bg",
             mapbox_layers=[
@@ -138,6 +125,20 @@ if opt=="Explore Data":
                 }
             ])
             fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+            st.plotly_chart(fig)
+
+            #------------------------------------------------------------------Are there any spatial clusters of high-priced listings?
+            from sklearn.cluster import KMeans         
+            df = df.dropna(subset=['Price'])
+            X = df[['latitude', 'longitude', 'Price']]
+            kmeans = KMeans(n_clusters=5, random_state=42)
+            df['cluster'] = kmeans.fit_predict(X)
+            fig = px.scatter_mapbox(df, lat="latitude", lon="longitude", color="cluster",
+                                    hover_name="suburb", hover_data=["Price"],
+                                    color_continuous_scale=px.colors.qualitative.Dark24,
+                                    zoom=1,width=1250,height=700)
+
+            fig.update_layout(mapbox_style="open-street-map", title="Spatial Clusters of High-Priced Listings")
             st.plotly_chart(fig)
 
       
@@ -181,7 +182,6 @@ if opt=="Explore Data":
          
             avg_price_by_location = df.groupby("Host_neighbourhood")["Price"].mean()  
 
-
             fig = px.bar(
                 avg_price_by_location.reset_index(), 
                 x="Host_neighbourhood", 
@@ -193,9 +193,11 @@ if opt=="Explore Data":
             )
             st.plotly_chart(fig)
 
-# What factors (e.g., amenities, review scores) influence listing prices the most?
+# how review scores influence listing prices the most?
         
             review_scores_prices = df.groupby('Review_scores')['Price'].mean().reset_index()
+            review_scores_prices['Price'] = review_scores_prices['Price'].round(3)
+
             figg = px.scatter(review_scores_prices, x='Review_scores', y='Price', title='Review Scores vs. Average Price',width=1300,height=700,color="Price",color_continuous_scale= "RdBu")
             st.plotly_chart(figg)
             
@@ -208,12 +210,14 @@ if opt=="Explore Data":
                 fig.add_trace(go.Histogram(x=data_for_policy['Price'], name=policy), row=1, col=i)
 
             fig.update_layout(title='Distribution of Prices by Cancellation Policy',width=1410,height=700)
+            fig.update_xaxes(title_text="Price")
+            fig.update_yaxes(title_text="Frequency")
             st.plotly_chart(fig)
 
 #------------------------------------------------------------------------- Avalaibility Analysis
 
     with col1:
-        on = st.toggle("##### **Avalaibility Analysis**")
+        on = st.toggle("##### **Availability Analysis**")
 
         if on:
            
@@ -233,6 +237,7 @@ if opt=="Explore Data":
 
             df1 = df1.drop(columns=['Id'])
             overall_availability = df1.mean()
+            overall_availability ['availability_365'] = overall_availability ['availability_365'].round(3)
             fig = px.pie(names=overall_availability.index, values=overall_availability.values,
                         title='Overall Availability Trend of Airbnb Listings',width=1300,height=700,)
             st.plotly_chart(fig)
@@ -242,6 +247,8 @@ if opt=="Explore Data":
 # How does the availability of listings change based on the cancellation policy?
            
             avg_data_by_cancellation_policy = df.groupby('Cancellation_policy').agg({'availability_365': 'mean', 'Price': 'mean'}).reset_index()
+            avg_data_by_cancellation_policy ['availability_365'] = avg_data_by_cancellation_policy ['availability_365'].round(3)
+
             fig = px.scatter_3d(avg_data_by_cancellation_policy, x='Cancellation_policy', z='availability_365', y='Price',
                                 title='Average Availability and Price by Cancellation Policy',width=1000,height=700,color="availability_365",color_continuous_scale="Plotly3",
                                 labels={'Cancellation_policy': 'Cancel Pol', 'availability_365': 'Avg Avail', 'Price': 'Price'})
@@ -264,6 +271,7 @@ if opt=="Explore Data":
 # What is the average availability for different room types?
 
             avg_availability_by_room_type = df.groupby('Room_type')['availability_365'].mean().reset_index()
+            avg_availability_by_room_type ['availability_365'] = avg_availability_by_room_type ['availability_365'].round(3)
 
             fig = px.pie(avg_availability_by_room_type, values='availability_365', names='Room_type',
                                 title='Average Availability by Room Type', hole=0.4,width=1300,height=700,)
@@ -296,24 +304,45 @@ if opt=="Explore Data":
 #-------------------------------------------What are the top amenities offered in listings across different neighborhoods?
 
 
-            amenities = df['Amenities'].str.replace('[{}]', '').str.replace('"', '').str.split(',')
-        
+            amenities = df['Amenities'].str.replace('[{}]', '', regex=True).str.replace('"', '', regex=True).str.split(',')
+
+            # Count the occurrences of each amenity
             amenity_counts = {}
             for amns in amenities:
                 for amenity in amns:
-                    if amenity.strip() in amenity_counts:
-                        amenity_counts[amenity.strip()] += 1
+                    amenity = amenity.strip()
+                    if amenity in amenity_counts:
+                        amenity_counts[amenity] += 1
                     else:
-                        amenity_counts[amenity.strip()] = 1
+                        amenity_counts[amenity] = 1
+
+            # Sort the amenities by count and select the top N
             sorted_amenities = sorted(amenity_counts.items(), key=lambda x: x[1], reverse=True)
             top_n = 10
             top_amenities = dict(sorted_amenities[:top_n])
-            fig = go.Figure(data=[go.Pie(labels=list(top_amenities.keys()), values=list(top_amenities.values()))])
-            fig.update_traces(hole=0.4, hoverinfo="label+percent+value", marker=dict(colors=px.colors.qualitative.Pastel))
-            fig.update_layout(title='Top Amenities Offered in Listings Across Different Neighborhoods',width=1300,height=700,)
+
+            # Create the pie chart
+            fig = go.Figure(data=[go.Pie(
+                labels=list(top_amenities.keys()), 
+                values=list(top_amenities.values()),
+                hole=0.4,
+                hovertemplate='<b>%{label}</b><br>Count: %{value}<br>Percentage: %{percent}',
+                name=''  
+            )])
+
+            fig.update_traces(
+                marker=dict(colors=px.colors.qualitative.Pastel)
+            )
+
+            fig.update_layout(
+                title='Top Amenities Offered in Listings Across Different Neighborhoods',
+                width=1300,
+                height=700,
+              
+            )
+
+            # Display the chart using Streamlit
             st.plotly_chart(fig)
-
-
             #----------------------------------------Are there any neighborhoods with a significantly higher average review score than others?
 
             avg_review_score_by_neighborhood = df.groupby('suburb')['Review_scores_rating'].mean().reset_index()
@@ -341,39 +370,8 @@ if opt=="Explore Data":
             fig.update_layout(xaxis_title='Neighborhood', yaxis_title='Number of Listings')
             st.plotly_chart(fig)
 
-            #________________________________________________here merge merge highest lowest host in one pie and highest lowest property 
         
-            coll,colll=st.columns([3,2],gap="small")
-            with coll:
         
-                hosts_by_country = df.groupby('Country')['Host_id_x'].nunique().reset_index(name='host_count')
-                property_types_by_country = df.groupby(['Country', 'Property_type']).size().reset_index(name='property_count')
-                country_with_highest_hosts = hosts_by_country.loc[hosts_by_country['host_count'].idxmax()]
-                country_with_lowest_hosts = hosts_by_country.loc[hosts_by_country['host_count'].idxmin()]
-                country_with_highest_property_types = property_types_by_country.groupby('Country')['Property_type'].nunique().reset_index()
-                country_with_highest_property_types = country_with_highest_property_types.loc[country_with_highest_property_types['Property_type'].idxmax()]
-                country_with_lowest_property_types = property_types_by_country.groupby('Country')['Property_type'].nunique().reset_index()
-                country_with_lowest_property_types = country_with_lowest_property_types.loc[country_with_lowest_property_types['Property_type'].idxmin()]
-                fig1 = go.Figure()
-                fig1.add_trace(go.Pie(labels=[f"Highest Hosts ({country_with_highest_hosts['Country']})", f"Lowest Hosts ({country_with_lowest_hosts['Country']})"],
-                                    values=[country_with_highest_hosts['host_count'], country_with_lowest_hosts['host_count']],
-                                    name="Number of Hosts",
-                                    hoverinfo='label+percent+name',
-                                    marker=dict(colors=["#636efa", "#EF553B"])))
-
-                fig1.update_layout(title_text="Highest and Lowest Number of Hosts by Country",width=700,height=400)
-                st.plotly_chart(fig1, use_container_width=True)
-            with colll:
-                fig2 = go.Figure()
-                fig2.add_trace(go.Pie(labels=[f"Highest Property Types ({country_with_highest_property_types['Country']})", f"Lowest Property Types ({country_with_lowest_property_types['Country']})"],
-                                    values=[country_with_highest_property_types['Property_type'], country_with_lowest_property_types['Property_type']],
-                                    name="Number of Property Types",
-                                    hoverinfo='label+percent+name',
-                                    marker=dict(colors=["#00cc96", "#ab63fa"])))
-
-                fig2.update_layout(title_text="Highest and Lowest Number of Property Types by Country",width=700,height=400)
-                #st.subheader("Distribution of Hosts and Property Types by Country")
-                st.plotly_chart(fig2, use_container_width=True)
 
     #---------------------------------------- INSIGHTS
 if opt=="Insights":
@@ -396,6 +394,7 @@ if opt=="Insights":
 
      #-----------------------------------------------------------------INSIGHTS 1ST TAB ROUGH ANALYSIS
         if analysis_type == "###### ***:rainbow[Rough Analysis]***":
+                dff = pd.read_csv("C:/Users/LENOVO/Desktop/Files/Host.csv")
             
            
                 
@@ -407,10 +406,7 @@ if opt=="Insights":
                             title='Distribution of Property Types', width=1300,height=700)
 
                 st.plotly_chart(fig)
-                #but=st.button("View DataFrame")
-                #if but:
-                    #=pd.DataFrame(property_type_counts)
-                    #st.write(a)
+                
 
 
             #------------------------------------------------------------- ( 2 )
@@ -455,18 +451,32 @@ if opt=="Insights":
                 st.plotly_chart(fig)
 
             #-------------------------------------------------------------------Which host verification method is the most popular among hosts?
-
-                all_verifications = ', '.join(df['Host_verifications'])
+               
+                dff['Host_verifications'] = dff['Host_verifications'].fillna('')
+                all_verifications = ', '.join(str(verification) for verification in dff['Host_verifications'] if pd.notnull(verification))
                 verifications_list = [verification.strip() for verification in all_verifications.split(',')]
-                verification_counts = pd.Series(verifications_list).value_counts().reset_index()
+                verifications_list = ['Undefined' if verification == '' else verification for verification in verifications_list]
+                verification_counts = pd.DataFrame(verifications_list, columns=['Verification Method'])
+                verification_counts = verification_counts['Verification Method'].value_counts().reset_index()
                 verification_counts.columns = ['Verification Method', 'Count']
-                fig = px.bar(verification_counts, x='Verification Method', y='Count',
-                            title='Popularity of Host Verification Methods',width=1100, height=700,color='Verification Method',
-                            labels={'Verification Method': 'Host Verification Method', 'Count': 'Number of Hosts'})
+                fig = px.bar(
+                    verification_counts, 
+                    x='Verification Method', 
+                    y='Count',
+                    title='Popularity of Host Verification Methods',
+                    width=1100, 
+                    height=700, 
+                    color='Verification Method',
+                    labels={'Verification Method': 'Host Verification Method', 'Count': 'Number of Hosts'}
+                )
 
-                fig.update_layout(xaxis_title='Verification Method', yaxis_title='Number of Hosts')
+                fig.update_layout(
+                    xaxis_title='Verification Method', 
+                    yaxis_title='Number of Hosts'
+                )
                 st.plotly_chart(fig)
-                      
+
+                
  # ---------------------------------------------------  INSIGHTS 2ND TAB TOP CHARTS
 
         elif analysis_type =="###### ***:rainbow[Top Charts]***":
@@ -515,17 +525,18 @@ if opt=="Insights":
                     st.plotly_chart(fig)
 
                 elif title=='3.Number of Available Listings in the Next 30 Days by City':
+
                     availability_30_by_city = df.groupby('market')['availability_30'].sum().reset_index()
                     availability_30_by_city_sorted = availability_30_by_city.sort_values(by='availability_30', ascending=False)
 
                     fig = px.bar(availability_30_by_city_sorted, x='market', y='availability_30',color="availability_30",color_continuous_scale='oryel',
-                                title='Number of Available Listings in the Next 30 Days by City', width=1300,height=700,
+                                title='Number of Available Listings for 30 Days over City', width=1300,height=700,
                                 labels={'market': 'City', 'availability_30': 'Available'})
 
                     fig.update_layout(xaxis_title='City', yaxis_title='Available')
                     st.plotly_chart(fig)
 
-                    # ------------------------------Which hosts have the highest average review scores?
+                   
                 elif title=='4.Top 10 Host IDs with Host Response Times':
 
                 # ---------------------------------What are the top 10 most common host response times?
@@ -583,6 +594,13 @@ if opt=="Insights":
                 # --------------------------------What are the top 10 most expensive property types by price ? 
 
                         avg_price_by_property_type = df.groupby('Property_type')['Price'].mean().reset_index()
+                        avg_price_by_property_type['Price'] = avg_price_by_property_type['Price'].round(3)
+                        top_10_expensive_property_types = avg_price_by_property_type.sort_values(by='Price', ascending=False).head(10)
+                        fig = px.bar(top_10_expensive_property_types, x='Property_type', y='Price',color="Price",color_continuous_scale='Pinkyl',
+                                    title='Top 10 Most Expensive Property Types by Price', width=1300,height=700,
+                                    labels={'Property_type': 'Property Type', 'Price': 'Average Price'})
+                        st.plotly_chart(fig)
+
                         top_10_expensive_property_types = avg_price_by_property_type.sort_values(by='Price', ascending=False).head(10)
                         fig = px.bar(top_10_expensive_property_types, x='Property_type', y='Price',color="Price",color_continuous_scale='Pinkyl',
                                     title='Top 10 Most Expensive Property Types by Price', width=1300,height=700,
@@ -619,23 +637,25 @@ if opt=="Insights":
                     st.plotly_chart(fig)
 
                 elif title=="11.Top 10 Most Popular Host Verification Methods":
+                    dff = pd.read_csv("C:/Users/LENOVO/Desktop/Files/Host.csv")
 
                 #-----------------------------------------Which host verification method is the most popular among hosts?
 
+                    
+                    df['Host_verifications'] = dff['Host_verifications'].astype(str)
                     all_verifications = ', '.join(df['Host_verifications'])
                     verifications_list = [verification.strip() for verification in all_verifications.split(',')]
                     verification_counts = pd.Series(verifications_list).value_counts().reset_index()
                     verification_counts.columns = ['Verification Method', 'Count']
-
-                    
-                    top_10_verification_methods = verification_counts.sort_values(by='Count', ascending=True).head(10)
-                    fig = px.bar(top_10_verification_methods, x='Verification Method', y='Count',color="Count" ,color_continuous_scale='bluyl',
-                                title='Top 10 Most Popular Host Verification Methods', width=1300,height=700,
+                    top_10_verification_methods = verification_counts.sort_values(by='Count', ascending=False).head(10)
+                    fig = px.bar(top_10_verification_methods, x='Verification Method', y='Count', color="Count", 
+                                color_continuous_scale='bluyl',
+                                title='Top 10 Most Popular Host Verification Methods', width=1300, height=700,
                                 labels={'Verification Method': 'Host Verification Method', 'Count': 'Number of Hosts'})
 
-                
                     fig.update_layout(xaxis_title='Verification Method', yaxis_title='Number of Hosts')
                     st.plotly_chart(fig)
+                                
 
 if opt=="About":
     st.markdown("### :red[*AIRBNB* ] ")
@@ -663,13 +683,11 @@ if opt=="About":
     st.markdown(
     """
     <div style="display: flex; justify-content: center;">
-        <a href="https://github.com/Dhanalakshmi177/Capstone-Project-4" style="color: violet; font-weight: bold; text-decoration: none; padding: 10px 20px; background-color: white; border: 2px solid violet; border-radius: 5px;">Open</a>
+        <a href="https://github.com/Dhanalakshmi177/Capstone-Project-4" style="color: violet; font-weight: bold; text-decoration: none; padding: 10px 20px; background-color: white; border: 2px solid violet; border-radius: 5px;">GitHub</a>
     </div>
     """,
     unsafe_allow_html=True
 )
-
-
 
 
 
